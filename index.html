@@ -1,0 +1,626 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deadline Rescue</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12222B; --ink-2:#2B3F4A; --muted:#5B6B73; --paper:#E9EEF0; --panel:#FFFFFF; --line:#D3DBDF;
+  --red:#D6382A; --red-bg:#FCE9E6; --amber:#B7700A; --amber-bg:#FDF1D8; --green:#1B7F63; --green-bg:#DDF1EA;
+  --blue:#2458A6; --blue-bg:#E3ECF9; --focus:#2458A6;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ink:#E8EEF0; --ink-2:#C5D1D6; --muted:#97A8B0; --paper:#0E181D; --panel:#16252C; --line:#2A3D46;
+    --red:#FF6B5B; --red-bg:#3A1C19; --amber:#F0B34A; --amber-bg:#35280F; --green:#4CC9A3; --green-bg:#12332B;
+    --blue:#7FAEF2; --blue-bg:#182C4A; --focus:#7FAEF2;
+  }
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 var(--body)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-radius:6px}
+.wrap{max-width:1320px;margin:0 auto;padding:20px 16px 56px}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px;padding:6px 0 18px}
+.top svg{flex:none}
+.brand h1{font:800 clamp(28px,4vw,40px)/1 var(--display);margin:0;letter-spacing:-.02em}
+.brand p{margin:4px 0 0;color:var(--muted)}
+.top .tools{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+@media (max-width:640px){.top{flex-wrap:wrap}.top .tools{margin-left:0;width:100%}}
+
+.btn{border:1px solid var(--line);background:var(--panel);padding:8px 14px;border-radius:10px;cursor:pointer;font-weight:500;min-height:40px}
+.btn:hover{border-color:var(--ink-2)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.primary:hover{opacity:.9}
+.btn.danger{color:var(--red)}
+
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+@media (max-width:1020px){.grid{grid-template-columns:1fr}}
+
+/* rescue-first hero */
+.hero{background:#12222B;color:#fff;border-radius:20px;padding:26px 28px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;position:relative;overflow:hidden}
+.hero .kicker{font:500 14px var(--body);opacity:.75;margin:0 0 6px}
+.hero h2{font:800 clamp(26px,3.6vw,42px)/1.08 var(--display);margin:0;letter-spacing:-.02em;max-width:22ch}
+.hero .meta{margin:12px 0 0;display:flex;gap:10px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:13px;font-weight:600;background:var(--blue-bg);color:var(--blue)}
+.pill.high{background:var(--red-bg);color:var(--red)}
+.pill.med{background:var(--amber-bg);color:var(--amber)}
+.pill.low{background:var(--green-bg);color:var(--green)}
+.pill.done{background:var(--line);color:var(--muted)}
+.hero .pill{background:rgba(255,255,255,.14);color:#fff}
+.hero .act{display:flex;gap:8px;margin-top:18px;flex-wrap:wrap}
+.hero .btn{background:#fff;color:#12222B;border-color:#fff}
+.hero .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.4)}
+.ring{width:150px;height:150px;position:relative}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg)}
+.ring .num{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ring .num b{font:800 38px/1 var(--display)}
+.ring .num span{font-size:13px;opacity:.8}
+@media (max-width:640px){.hero{grid-template-columns:1fr;padding:22px 20px}.ring{width:120px;height:120px}}
+.hero.calm{background:#145C48}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.stat b{display:block;font:700 28px/1.1 var(--display)}
+.stat span{color:var(--muted);font-size:13px}
+.stat.over b{color:var(--red)} .stat.today b{color:var(--amber)} .stat.done b{color:var(--green)}
+
+/* add form */
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px}
+.add{padding:16px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end}
+@media (max-width:820px){.add{grid-template-columns:1fr 1fr}.add .f-title{grid-column:1/-1}.add button{grid-column:1/-1}}
+.f label{display:block;font-size:13px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.f input,.f select,.search input,.sortbar select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--paper);min-height:42px}
+.err{grid-column:1/-1;color:var(--red);font-size:14px;margin:0;min-height:0}
+
+/* list */
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:18px 0 10px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:14px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.sortbar{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.sortbar select{width:auto}
+.list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:14px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.row.found{outline:3px solid var(--blue);outline-offset:1px}
+.row.done .t{text-decoration:line-through;color:var(--muted)}
+.id{font:500 13px var(--mono);color:var(--muted);min-width:34px}
+.t{font-weight:600;overflow-wrap:anywhere}
+.sub{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:3px;font-size:13.5px;color:var(--muted)}
+.late{color:var(--red);font-weight:600}.soon{color:var(--amber);font-weight:600}
+.meter{height:6px;border-radius:99px;background:var(--line);margin-top:8px;overflow:hidden;max-width:320px}
+.meter i{display:block;height:100%;border-radius:99px;background:var(--green)}
+.meter i.m-amber{background:var(--amber)} .meter i.m-red{background:var(--red)}
+.score{font:500 12.5px var(--mono);color:var(--muted)}
+.acts{display:flex;gap:6px}
+.icon{width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--paper);cursor:pointer;display:grid;place-content:center}
+.icon:hover{border-color:var(--ink-2)}
+.icon.ok:hover{color:var(--green);border-color:var(--green)}
+.icon.del:hover,.icon.del.armed{color:var(--red);border-color:var(--red)}
+.icon.del.armed{background:var(--red-bg);width:auto;padding:0 10px;font-size:13px;font-weight:600}
+.empty{padding:34px 20px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:14px}
+@media (max-width:560px){.row{grid-template-columns:1fr}.id{order:-1}.acts{justify-content:flex-end}}
+
+/* DSA lab */
+.lab{position:sticky;top:14px;padding:18px;display:grid;gap:18px}
+@media (max-width:1020px){.lab{position:static}}
+.lab h3{font:700 18px var(--display);margin:0}
+.lab h4{font:600 14px var(--body);margin:0 0 8px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.lab h4 small{font:400 12.5px var(--mono);color:var(--muted)}
+.cells{display:grid;grid-template-columns:repeat(10,1fr);gap:4px}
+.cell{aspect-ratio:1;border:1px solid var(--line);border-radius:6px;display:grid;place-content:center;font:500 12px var(--mono);color:var(--muted);background:var(--paper);position:relative}
+.cell.on{background:var(--blue-bg);border-color:var(--blue);color:var(--blue);font-weight:600}
+.cell.hit{background:var(--blue);color:var(--paper);border-color:var(--blue)}
+.cell.shift{background:var(--amber-bg);border-color:var(--amber);color:var(--amber)}
+.cell.ext{opacity:.7}
+.idx{font:400 11px var(--mono);color:var(--muted);text-align:center}
+.stack{display:flex;flex-direction:column;gap:4px;min-height:60px}
+.slot{border:1px solid var(--line);border-radius:8px;padding:6px 10px;font:500 13px var(--mono);display:flex;justify-content:space-between;background:var(--paper)}
+.slot.top{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.slot em{font-style:normal;opacity:.7}
+.hint{color:var(--muted);font-size:13.5px;margin:0}
+.oplog{background:var(--paper);border-radius:12px;padding:12px 14px;border:1px solid var(--line)}
+.oplog b{font:500 13px var(--mono);display:block}
+.oplog .big{display:inline-block;margin:6px 0 4px;padding:2px 9px;border-radius:99px;background:var(--ink);color:var(--paper);font:500 13px var(--mono)}
+.oplog p{margin:4px 0 0;font-size:14px}
+.search{display:flex;gap:8px}
+.search input{flex:1}
+.cx{width:100%;border-collapse:collapse;font-size:13px}
+.cx td{padding:4px 0;border-top:1px solid var(--line)}
+.cx td:last-child{text-align:right;font-family:var(--mono)}
+
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:10px 16px;border-radius:12px;font-size:14px;box-shadow:0 8px 28px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s;z-index:9;max-width:90vw}
+.toast.show{opacity:1}
+.flash{animation:fl .9s ease-out}
+@keyframes fl{from{box-shadow:0 0 0 3px var(--blue)}to{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true">
+      <circle cx="26" cy="26" r="20" fill="none" stroke="var(--panel)" stroke-width="12"/>
+      <g fill="none" stroke-width="12">
+        <path d="M26 6 A20 20 0 0 1 46 26" stroke="#D6382A"/>
+        <path d="M46 26 A20 20 0 0 1 26 46" stroke="var(--panel)"/>
+        <path d="M26 46 A20 20 0 0 1 6 26" stroke="#D6382A"/>
+        <path d="M6 26 A20 20 0 0 1 26 6" stroke="var(--panel)"/>
+      </g>
+      <circle cx="26" cy="26" r="26" fill="none" stroke="var(--ink)" stroke-width="2"/>
+      <circle cx="26" cy="26" r="14" fill="none" stroke="var(--ink)" stroke-width="2"/>
+    </svg>
+    <div class="brand">
+      <h1>Deadline Rescue</h1>
+      <p>Know what to do next. Rescue your deadlines.</p>
+    </div>
+    <div class="tools">
+      <button class="btn" id="undoBtn" title="Undo the last completion (stack pop)">↶ Undo completion</button>
+      <button class="btn" id="resetBtn" title="Replace everything with sample tasks">Load sample tasks</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <main>
+      <section class="hero" id="hero" aria-live="polite"></section>
+
+      <div class="stats" id="stats"></div>
+
+      <form class="card add" id="addForm" novalidate>
+        <div class="f f-title"><label for="fTitle">Task title</label><input id="fTitle" maxlength="120" placeholder="e.g. Submit DSA assignment" autocomplete="off"></div>
+        <div class="f"><label for="fDate">Deadline</label><input id="fDate" type="date"></div>
+        <div class="f"><label for="fPri">Priority</label>
+          <select id="fPri"><option>High</option><option selected>Medium</option><option>Low</option></select></div>
+        <button class="btn primary" type="submit">Add task</button>
+        <p class="err" id="formErr" role="alert"></p>
+      </form>
+
+      <div class="bar">
+        <div class="chips" id="chips" role="group" aria-label="Filter tasks"></div>
+        <label class="sortbar">Sort by
+          <select id="sortSel">
+            <option value="urgency">Recommended urgency</option>
+            <option value="deadline">Deadline (soonest)</option>
+            <option value="priority">Priority (highest)</option>
+          </select>
+        </label>
+      </div>
+      <ul class="list" id="list"></ul>
+    </main>
+
+    <aside class="card lab" aria-label="Data structure lab">
+      <div>
+        <h3>Data structure lab</h3>
+        <p class="hint">See what the array and stack do behind every action you take.</p>
+      </div>
+
+      <div class="oplog" id="oplog" aria-live="polite"></div>
+
+      <div>
+        <h4>TaskArray (custom resizable array) <small id="arrMeta"></small></h4>
+        <div class="cells" id="cells"></div>
+      </div>
+
+      <div>
+        <h4>UndoStack (custom stack) <small id="stkMeta"></small></h4>
+        <div class="stack" id="stack"></div>
+      </div>
+
+      <div>
+        <h4>Linear search by ID</h4>
+        <form class="search" id="searchForm">
+          <input id="sId" inputmode="numeric" placeholder="Task ID" aria-label="Task ID">
+          <button class="btn" type="submit">Find</button>
+        </form>
+      </div>
+
+      <div>
+        <h4>Complexity</h4>
+        <table class="cx">
+          <tr><td>Index lookup</td><td>O(1)</td></tr>
+          <tr><td>Add (amortized)</td><td>O(1)</td></tr>
+          <tr><td>Search / remove by ID</td><td>O(n)</td></tr>
+          <tr><td>Stack push / pop</td><td>O(1)</td></tr>
+          <tr><td>Merge sort</td><td>O(n log n)</td></tr>
+        </table>
+      </div>
+    </aside>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ===========================================================
+   DSA layer — direct port of the Java classes
+   Task, TaskArray, UndoStack, DeadlineAnalyzer, TaskManager
+   =========================================================== */
+const MS_DAY = 86400000;
+function today(){ const d = new Date(); return new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+function parseDate(s){ const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s||""); if(!m) return null;
+  const d = new Date(+m[1], +m[2]-1, +m[3]); return d.getMonth()===+m[2]-1 ? d : null; }
+function fmtDate(d){ const p=n=>String(n).padStart(2,"0"); return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate()); }
+function addDays(n){ const d = today(); d.setDate(d.getDate()+n); return d; }
+
+class Task {
+  constructor(id, title, deadline, priority, completed){
+    this.id=id; this.title=title; this.deadline=deadline; this.priority=priority; this.completed=completed;
+  }
+  daysLeft(){ return Math.round((this.deadline - today())/MS_DAY); }
+  isOverdue(){ return !this.completed && this.daysLeft() < 0; }
+  priorityWeight(){ return this.priority==="High"?3 : this.priority==="Medium"?2 : 1; }
+  urgencyScore(){
+    if (this.completed) return 0;
+    const d = this.daysLeft();
+    if (d < 0) return 1000 + this.priorityWeight()*10 + Math.abs(d);
+    return (10*this.priorityWeight())/(d+1);
+  }
+}
+
+class TaskArray {                       // manual dynamic array
+  constructor(){ this.data = new Array(10).fill(null); this.size = 0; this.lastGrowth = null; }
+  get capacity(){ return this.data.length; }
+  get(i){ if(i<0||i>=this.size) throw new RangeError("Invalid task index"); return this.data[i]; }
+  add(task){
+    let grew = null;
+    if (this.size === this.data.length){            // ensureCapacity()
+      const bigger = new Array(this.data.length*2).fill(null);
+      for (let i=0;i<this.size;i++) bigger[i]=this.data[i];
+      grew = {from:this.data.length, to:bigger.length, copied:this.size};
+      this.data = bigger;
+    }
+    this.data[this.size++] = task;
+    return {index:this.size-1, grew};
+  }
+  findById(id){                                     // linear search
+    let steps=0;
+    for (let i=0;i<this.size;i++){ steps++; if (this.data[i].id===id) return {task:this.data[i], index:i, steps}; }
+    return {task:null, index:-1, steps};
+  }
+  removeById(id){                                   // shift left
+    const f = this.findById(id);
+    if (f.index===-1) return {removed:null, steps:f.steps, shifted:0, index:-1};
+    let shifted=0;
+    for (let i=f.index;i<this.size-1;i++){ this.data[i]=this.data[i+1]; shifted++; }
+    this.data[--this.size]=null;
+    return {removed:f.task, steps:f.steps, shifted, index:f.index};
+  }
+  toArray(){ return this.data.slice(0,this.size); }
+  clear(){ this.data=new Array(10).fill(null); this.size=0; }
+}
+
+class UndoStack {                                   // manual stack (array + top pointer)
+  constructor(){ this.data=new Array(10).fill(null); this.top=-1; }
+  isEmpty(){ return this.top===-1; }
+  size(){ return this.top+1; }
+  push(a){
+    if (this.top+1===this.data.length){
+      const l=new Array(this.data.length*2).fill(null);
+      for (let i=0;i<this.data.length;i++) l[i]=this.data[i];
+      this.data=l;
+    }
+    this.data[++this.top]=a;
+  }
+  pop(){ if(this.isEmpty()) return null; const a=this.data[this.top]; this.data[this.top--]=null; return a; }
+  peek(){ return this.isEmpty()?null:this.data[this.top]; }
+  items(){ return this.data.slice(0,this.top+1); }
+  clear(){ this.data=new Array(10).fill(null); this.top=-1; }
+}
+
+/* Merge sort written by hand (stable, O(n log n)). Java used Arrays.sort — same result. */
+function mergeSort(arr, cmp, stats){
+  if (arr.length<=1) return arr.slice();
+  const mid = arr.length>>1;
+  const L = mergeSort(arr.slice(0,mid), cmp, stats), R = mergeSort(arr.slice(mid), cmp, stats);
+  const out=[]; let i=0,j=0;
+  while (i<L.length && j<R.length){ stats.comparisons++; (cmp(L[i],R[j])<=0) ? out.push(L[i++]) : out.push(R[j++]); }
+  while (i<L.length) out.push(L[i++]);
+  while (j<R.length) out.push(R[j++]);
+  return out;
+}
+const cmpStr = (a,b)=>{ a=a.toLowerCase(); b=b.toLowerCase(); return a<b?-1:a>b?1:0; };
+const DeadlineAnalyzer = {
+  sortByDeadline:(t,s)=>mergeSort(t,(a,b)=>{
+    if (a.completed!==b.completed) return a.completed?1:-1;
+    return (a.deadline-b.deadline) || cmpStr(a.title,b.title);
+  },s),
+  sortByPriority:(t,s)=>mergeSort(t,(a,b)=>{
+    if (a.completed!==b.completed) return a.completed?1:-1;
+    return (b.priorityWeight()-a.priorityWeight()) || (a.deadline-b.deadline);
+  },s),
+  sortByUrgency:(t,s)=>mergeSort(t,(a,b)=>{
+    if (a.completed!==b.completed) return a.completed?1:-1;
+    return b.urgencyScore()-a.urgencyScore();
+  },s)
+};
+
+class TaskManager {
+  constructor(key){ this.key=key; this.tasks=new TaskArray(); this.undo=new UndoStack(); this.nextId=1; this.load(); }
+  getTasks(){ return this.tasks.toArray(); }
+  addTask(title, deadline, priority){
+    const t = new Task(this.nextId++, title.trim(), deadline, priority, false);
+    const r = this.tasks.add(t); this.save(); return {task:t, ...r};
+  }
+  markCompleted(id){
+    const f = this.tasks.findById(id);
+    if (!f.task || f.task.completed) return null;
+    this.undo.push({taskId:id, previousCompleted:f.task.completed});
+    f.task.completed = true; this.save(); return f;
+  }
+  undoLastCompletion(){
+    const a = this.undo.pop(); if(!a) return null;
+    const f = this.tasks.findById(a.taskId); if(!f.task) return null;
+    f.task.completed = a.previousCompleted; this.save(); return {...f, action:a};
+  }
+  deleteTask(id){ const r=this.tasks.removeById(id); if(r.removed) this.save(); return r; }
+  seed(){
+    this.tasks.clear(); this.undo.clear(); this.nextId=1;
+    [["Submit DSA assignment",1,"High"],["Revise stacks and queues",3,"Medium"],
+     ["Lab record file",-2,"High"],["Prepare viva questions",5,"Medium"],
+     ["Pay exam form fees",0,"High"],["Library book return",-1,"Low"],
+     ["Group project meeting",7,"Low"]].forEach(([t,d,p])=>{
+      this.tasks.add(new Task(this.nextId++, t, addDays(d), p, false));
+    });
+    this.save();
+  }
+  save(){
+    try{
+      localStorage.setItem(this.key, JSON.stringify({nextId:this.nextId,
+        tasks:this.tasks.toArray().map(t=>({id:t.id,title:t.title,deadline:fmtDate(t.deadline),priority:t.priority,completed:t.completed}))}));
+    }catch(e){}
+  }
+  load(){
+    let raw=null; try{ raw=localStorage.getItem(this.key); }catch(e){}
+    if (!raw){ this.seed(); return; }
+    try{
+      const o=JSON.parse(raw);
+      o.tasks.forEach(x=>{ const d=parseDate(x.deadline); if(d) this.tasks.add(new Task(x.id,x.title,d,x.priority,!!x.completed)); });
+      this.nextId=Math.max(o.nextId||1, ...this.tasks.toArray().map(t=>t.id+1), 1);
+    }catch(e){ this.tasks.clear(); this.seed(); }
+  }
+}
+
+/* ===========================================================
+   UI
+   =========================================================== */
+const $ = s=>document.querySelector(s);
+const mgr = new TaskManager("deadlineRescue.v1");
+let filter="all", sortMode="urgency", armedDelete=null, foundId=null, hitIdx=null, shiftFrom=null, growFlag=false;
+let oplog = {name:"Ready", big:"—", text:"Add, complete or delete a task to see the data structures work."};
+
+const esc = s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ICON = {
+  check:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+  trash:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2m-9 0 1 14h8l1-14"/></svg>'
+};
+function setLog(name,big,text){ oplog={name,big,text}; }
+let toastT; function toast(m){ const t=$("#toast"); t.textContent=m; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),2200); }
+
+function statusOf(t){
+  if (t.completed) return {k:"done", label:"Completed"};
+  const d=t.daysLeft();
+  if (d<0) return {k:"over", label:"Overdue"};
+  if (d===0) return {k:"today", label:"Due today"};
+  return {k:"pending", label:"Pending"};
+}
+function daysText(t){
+  if (t.completed) return "";
+  const d=t.daysLeft();
+  return d<0 ? Math.abs(d)+" day(s) late" : d===0 ? "Due today" : d+" day(s) left";
+}
+function sorted(tasks){
+  const s={comparisons:0};
+  const r = sortMode==="deadline" ? DeadlineAnalyzer.sortByDeadline(tasks,s)
+          : sortMode==="priority" ? DeadlineAnalyzer.sortByPriority(tasks,s)
+          : DeadlineAnalyzer.sortByUrgency(tasks,s);
+  return {list:r, comparisons:s.comparisons};
+}
+
+function renderHero(all){
+  const hero=$("#hero");
+  const list=DeadlineAnalyzer.sortByUrgency(all,{comparisons:0});
+  const next=list.find(t=>!t.completed);
+  if (!next){
+    hero.className="hero calm";
+    hero.innerHTML=`<div><p class="kicker">Nothing waiting</p><h2>${all.length?"Every deadline is rescued.":"Add your first task to get started."}</h2></div>`;
+    return;
+  }
+  hero.className="hero";
+  const d=next.daysLeft(), st=statusOf(next);
+  const pr=next.priority==="High"?"high":next.priority==="Medium"?"med":"low";
+  const frac = d<0 ? 1 : Math.max(0.06, 1 - Math.min(d,14)/14);
+  const C=2*Math.PI*60, off=C*(1-frac);
+  const big = d<0?Math.abs(d):d, lbl = d<0?"days late":d===0?"due today":"days left";
+  hero.innerHTML=`
+    <div>
+      <p class="kicker">Rescue this first</p>
+      <h2>${esc(next.title)}</h2>
+      <div class="meta"><span class="pill">${esc(next.priority)} priority</span><span class="pill">${esc(fmtDate(next.deadline))}</span><span class="pill">Urgency ${next.urgencyScore()>=1000?"critical":next.urgencyScore().toFixed(1)}</span></div>
+      <div class="act"><button class="btn" data-hero-done="${next.id}">Mark completed</button></div>
+    </div>
+    <div class="ring" role="img" aria-label="${big} ${lbl}">
+      <svg viewBox="0 0 140 140"><circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="12"/>
+      <circle cx="70" cy="70" r="60" fill="none" stroke="${d<0?'#FF8A7C':d===0?'#FFD27A':'#7FE0C0'}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"/></svg>
+      <div class="num"><b>${d===0?"0":big}</b><span>${lbl}</span></div>
+    </div>`;
+}
+
+function renderStats(all){
+  let pending=0, over=0, today0=0, done=0;
+  all.forEach(t=>{ if(t.completed) done++; else { pending++; if(t.isOverdue()) over++; else if(t.daysLeft()===0) today0++; }});
+  $("#stats").innerHTML=`
+    <div class="stat"><b>${pending}</b><span>Pending</span></div>
+    <div class="stat over"><b>${over}</b><span>Overdue</span></div>
+    <div class="stat today"><b>${today0}</b><span>Due today</span></div>
+    <div class="stat done"><b>${done}</b><span>Completed</span></div>`;
+  return {pending,over,today0,done};
+}
+
+function renderChips(c, total){
+  const defs=[["all","All",total],["pending","Pending",c.pending],["overdue","Overdue",c.over],["today","Due today",c.today0],["done","Completed",c.done]];
+  $("#chips").innerHTML=defs.map(([k,l,n])=>`<button class="chip" data-f="${k}" aria-pressed="${filter===k}">${l} (${n})</button>`).join("");
+}
+
+function renderList(all){
+  const {list, comparisons} = sorted(all);
+  const shown = list.filter(t=>{
+    const s=statusOf(t).k;
+    return filter==="all" || (filter==="pending"&&!t.completed) || (filter==="overdue"&&s==="over") || (filter==="today"&&s==="today") || (filter==="done"&&t.completed);
+  });
+  if (!shown.length){
+    $("#list").innerHTML=`<li class="empty">${all.length?"No tasks match this filter.":"No tasks yet. Add one above to see it ranked by urgency."}</li>`;
+  } else {
+    $("#list").innerHTML=shown.map(t=>{
+      const st=statusOf(t), sc=t.urgencyScore();
+      const pct = t.completed?0 : sc>=1000?100 : Math.min(sc/30,1)*100;
+      const mc = st.k==="over"?"m-red":(sc>=5?"m-amber":"");
+      const pr=t.priority==="High"?"high":t.priority==="Medium"?"med":"low";
+      const dcls = st.k==="over"?"late":st.k==="today"?"soon":"";
+      return `<li class="row ${t.completed?"done":""} ${foundId===t.id?"found":""}" data-id="${t.id}">
+        <span class="id">#${t.id}</span>
+        <div>
+          <div class="t">${esc(t.title)}</div>
+          <div class="sub"><span class="pill ${t.completed?"done":pr}">${t.priority}</span><span>${fmtDate(t.deadline)}</span>
+            <span class="${dcls}">${t.completed?"Completed":daysText(t)}</span>
+            ${t.completed?"":`<span class="score">score ${sc>=1000?sc.toFixed(0):sc.toFixed(1)}</span>`}</div>
+          ${t.completed?"":`<div class="meter" aria-hidden="true"><i class="${mc}" style="width:${pct}%"></i></div>`}
+        </div>
+        <div class="acts">
+          ${t.completed?"":`<button class="icon ok" data-done="${t.id}" aria-label="Mark ${esc(t.title)} completed" title="Mark completed">${ICON.check}</button>`}
+          ${armedDelete===t.id
+            ? `<button class="icon del armed" data-del="${t.id}">Delete?</button>`
+            : `<button class="icon del" data-del="${t.id}" aria-label="Delete ${esc(t.title)}" title="Delete">${ICON.trash}</button>`}
+        </div></li>`;
+    }).join("");
+  }
+  return comparisons;
+}
+
+function renderLab(){
+  const arr=mgr.tasks, cap=arr.capacity;
+  $("#arrMeta").textContent=`size ${arr.size} / capacity ${cap}`;
+  let h="";
+  for (let i=0;i<cap;i++){
+    const t=arr.data[i];
+    const cls=["cell"]; if(t) cls.push("on"); if(i===hitIdx) cls.push("hit"); if(shiftFrom!==null && i>=shiftFrom && t) cls.push("shift");
+    if (i>=10) cls.push("ext");
+    h+=`<div><div class="${cls.join(" ")}${growFlag&&i>=cap/2?" flash":""}" title="index ${i}">${t?t.id:"·"}</div><div class="idx">${i}</div></div>`;
+  }
+  $("#cells").innerHTML=h;
+  const items=mgr.undo.items();
+  $("#stkMeta").textContent=`top ${mgr.undo.top}`;
+  $("#stack").innerHTML = items.length
+    ? items.slice().reverse().map((a,i)=>`<div class="slot ${i===0?"top":""}"><span>${i===0?"top → ":""}complete #${a.taskId}</span><em>was ${a.previousCompleted?"done":"pending"}</em></div>`).join("")
+    : `<p class="hint">Stack is empty. Complete a task and it is pushed here.</p>`;
+  $("#undoBtn").disabled = mgr.undo.isEmpty();
+  $("#oplog").innerHTML=`<b>${esc(oplog.name)}</b><span class="big">${esc(oplog.big)}</span><p>${esc(oplog.text)}</p>`;
+}
+
+function render(){
+  const all=mgr.getTasks();
+  renderHero(all);
+  const c=renderStats(all);
+  renderChips(c, all.length);
+  const cmp=renderList(all);
+  renderLab();
+  return cmp;
+}
+function act(fn){ hitIdx=null; shiftFrom=null; growFlag=false; fn(); render(); setTimeout(()=>{hitIdx=null;shiftFrom=null;growFlag=false;renderLab();},1400); }
+
+/* ---- events ---- */
+$("#addForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const title=$("#fTitle").value.trim(), d=parseDate($("#fDate").value), err=$("#formErr");
+  if(!title){ err.textContent="Task title cannot be empty."; $("#fTitle").focus(); return; }
+  if(!d){ err.textContent="Pick a valid deadline date."; $("#fDate").focus(); return; }
+  err.textContent="";
+  act(()=>{
+    const r=mgr.addTask(title,d,$("#fPri").value);
+    hitIdx=r.index; growFlag=!!r.grew;
+    setLog("TaskArray.add","O(1) amortized", r.grew
+      ? `Array was full, so capacity doubled from ${r.grew.from} to ${r.grew.to} and ${r.grew.copied} items were copied. That copy costs O(n), but it happens rarely.`
+      : `Placed at index ${r.index}. No shifting or copying needed.`);
+  });
+  $("#fTitle").value=""; $("#fTitle").focus(); toast("Added");
+});
+
+function completeTask(id){
+  act(()=>{
+    const f=mgr.markCompleted(id);
+    if(!f){ toast("That task is already completed or no longer exists."); return; }
+    hitIdx=f.index;
+    setLog("findById + UndoStack.push","O(n) + O(1)",`Linear search checked ${f.steps} of ${mgr.tasks.size} slots to find #${id}. Then the action was pushed on the stack.`);
+    toast("Completed. You can undo it.");
+  });
+}
+function doUndo(){
+  act(()=>{
+    const r=mgr.undoLastCompletion();
+    if(!r){ toast("Nothing to undo yet."); return; }
+    hitIdx=r.index;
+    setLog("UndoStack.pop","O(1)",`Popped the latest action (task #${r.action.taskId}) and restored it to pending. Last in, first out.`);
+    toast("Completion undone");
+  });
+}
+$("#undoBtn").addEventListener("click",doUndo);
+$("#resetBtn").addEventListener("click",()=>act(()=>{ mgr.seed(); foundId=null; armedDelete=null; setLog("Reset","O(n)","Cleared the array and the stack, then re-added the sample tasks."); toast("Sample tasks loaded"); }));
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button"); if(!b) return;
+  if (b.dataset.heroDone) return completeTask(+b.dataset.heroDone);
+  if (b.dataset.done) return completeTask(+b.dataset.done);
+  if (b.dataset.f){ filter=b.dataset.f; return render(); }
+  if (b.dataset.del){
+    const id=+b.dataset.del;
+    if (armedDelete!==id){ armedDelete=id; render(); return; }
+    armedDelete=null;
+    act(()=>{
+      const r=mgr.deleteTask(id);
+      if(!r.removed){ toast("Task no longer exists."); return; }
+      shiftFrom=r.index; hitIdx=r.index;
+      setLog("TaskArray.removeById","O(n)",`Found #${id} at index ${r.index} after ${r.steps} step(s), then shifted ${r.shifted} item(s) left to close the gap. Delete is not undoable, same as the Java version.`);
+      toast("Deleted");
+    });
+  }
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && armedDelete!==null){ armedDelete=null; render(); } });
+$("#sortSel").addEventListener("change",e=>{
+  sortMode=e.target.value; hitIdx=null;
+  const n=mgr.tasks.size, c=render();
+  const name={urgency:"sortByUrgency",deadline:"sortByDeadline",priority:"sortByPriority"}[sortMode];
+  setLog("DeadlineAnalyzer."+name,"O(n log n)",`Merge sort ordered ${n} task(s) using ${c} comparison(s). Completed tasks always go last.`); renderLab();
+});
+$("#searchForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const id=parseInt($("#sId").value,10);
+  if(isNaN(id)){ toast("Enter a numeric task ID."); return; }
+  const f=mgr.tasks.findById(id);
+  hitIdx=f.index>=0?f.index:null; foundId=f.task?id:null;
+  setLog("TaskArray.findById","O(n)", f.task
+    ? `Found #${id} at index ${f.index} after ${f.steps} comparison(s). Best case 1, worst case ${mgr.tasks.size}.`
+    : `No task with ID ${id}. Checked all ${f.steps} slot(s), which is the worst case.`);
+  render();
+  if(f.task){ const el=document.querySelector(`.row[data-id="${id}"]`); if(el) el.scrollIntoView({block:"center",behavior:"smooth"}); }
+  else toast("No task with ID "+id);
+  setTimeout(()=>{foundId=null;hitIdx=null;render();},3500);
+});
+
+$("#fDate").value=fmtDate(addDays(1));
+render();
+</script>
+</body>
+</html>
